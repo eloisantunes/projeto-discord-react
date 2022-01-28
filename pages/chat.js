@@ -1,59 +1,77 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMzMDc3OCwiZXhwIjoxOTU4OTA2Nzc4fQ.4txIL7wi5NL1NHRoXxkWnisp2lRqXl8Wo1a2KOS9LHM'
+const SUPABASE_URL = 'https://tkzrnsarvftnqtxxpsjd.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
     
     const [mensagem, setMensagem]=React.useState('');
     const [listaDeMensagens, setlistaDeMensagens]=React.useState([]);
 
+    React.useEffect(() => {
+        supabaseClient
+        .from('mensagens')
+        .select('*')
+        .order('id', { ascending: false })
+        .then(({ data}) => {
+            console.log('Dados da consulta:', data)
+            setlistaDeMensagens(data);
+        })
+    }, []);
+
+
     function handleNovaMensagem(novaMensagem){
         const mensagem = {
-            id: listaDeMensagens.length +1,
+           // id: listaDeMensagens.length +1,
             de: 'vanessametonini',
             texto: novaMensagem,
         };
 
-        setlistaDeMensagens([
-            mensagem,
-            ...listaDeMensagens,
-
-        ])
-
-        setMensagem('')
-
-    }
-
-
-
-
-
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .then(({data}) => {
+                console.log('Criando mensagem: ', data);
+                setlistaDeMensagens([
+                    data[0],
+                        ...listaDeMensagens,
+                ])
+            });
+            setMensagem('');
+        }
 
     return (
         <Box
-            styleSheet={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: appConfig.theme.colors.primary[500],
-                backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
-                backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
-                color: appConfig.theme.colors.neutrals['000']
-            }}
-        >
-            <Box
-                styleSheet={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1,
-                    boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
-                    borderRadius: '5px',
-                    backgroundColor: appConfig.theme.colors.neutrals[700],
-                    height: '100%',
-                    maxWidth: '95%',
-                    maxHeight: '95vh',
-                    padding: '32px',
-                }}
-            >
-                <Header />
+      styleSheet={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: appConfig.theme.colors.primary[500],
+        backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
+        backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundBlendMode: 'multiply',
+        color: appConfig.theme.colors.neutrals['000']
+      }}
+    >
+      <Box
+        styleSheet={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
+          borderRadius: '5px',
+          backgroundColor: appConfig.theme.colors.neutrals[700],
+          height: '100%',
+          maxWidth: '95%',
+          maxHeight: '95vh',
+          padding: '32px',
+        }}
+      >
+        <Header />
                 <Box
                     styleSheet={{
                         position: 'relative',
@@ -183,7 +201,7 @@ function MessageList(props) {
                             display: 'inline-block',
                             marginRight: '8px',
                         }}
-                        src={`https://github.com/vanessametonini.png`}
+                        src={`https://github.com/${mensagem.de}.png`}
                     />
                     <Text tag="strong">
                         {mensagem.de}
